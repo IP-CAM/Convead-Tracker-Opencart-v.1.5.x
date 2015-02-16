@@ -107,7 +107,7 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			]]></add>
 		</operation>
 		<operation error="skip">
-			<search position="after" offset="1"><![CDATA[$this->session->data['cart'][$key] += (int)$qty;]]></search>
+			<search position="after" offset="1"><![CDATA[$this->session->data['cart'][$key] += (int)]]></search>
 			<add><![CDATA[
 if($this->config->get('convead_code')){
 foreach ($this->getProducts() as $product) {
