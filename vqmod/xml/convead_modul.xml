@@ -109,29 +109,47 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 		<operation error="skip">
 			<search position="after" offset="1"><![CDATA[$this->session->data['cart'][$key] += (int)]]></search>
 			<add><![CDATA[
-if($this->config->get('convead_code')){
-foreach ($this->getProducts() as $product) {
-	if($product['key']==$key){
-		$url_p = HTTP_SERVER."index.php?route=product/product&product_id=".$product['product_id'];
-		$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
-		$this->convead->eventAddToCart($product['product_id'], $qty, $price, $product['name'], $url_p);
-	}
-}
-}
+			$key = $this->config->get('convead_code');
+			if($key){
+				include_once('convead_api/Browser.php');
+				include_once('convead_api/ConveadTracker.php');
+
+				// Initialize (must be done before sending events):
+				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
+				$items = array();
+				foreach ($this->getProducts() as $product) {
+					$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
+					$items[] = array(
+						'product_id' => $product['product_id'],
+						'qnt' => $product['quantity'],
+						'price' => $price
+					);
+				}
+				$convead->eventUpdateCart($items);
+			}
 			]]></add>
 		</operation>
 		<operation error="skip">
-			<search position="before"><![CDATA[unset($this->session->data['cart'][$key]);]]></search>
+			<search position="after"><![CDATA[unset($this->session->data['cart'][$key]);]]></search>
 			<add><![CDATA[
-$count = $this->session->data['cart'][$key];
-if($this->config->get('convead_code')){
-foreach ($this->getProducts() as $product) {
-	if($product['key']==$key){
-		$url_p = HTTP_SERVER."index.php?route=product/product&product_id=".$product['product_id'];
-		$this->convead->eventRemoveFromCart($product['product_id'], $count, $product['name'], $url_p);
-	}
-}
-}
+			$key = $this->config->get('convead_code');
+			if($key){
+				include_once('convead_api/Browser.php');
+				include_once('convead_api/ConveadTracker.php');
+
+				// Initialize (must be done before sending events):
+				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
+				$items = array();
+				foreach ($this->getProducts() as $product) {
+					$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
+					$items[] = array(
+						'product_id' => $product['product_id'],
+						'qnt' => $product['quantity'],
+						'price' => $price
+					);
+				}
+				$convead->eventUpdateCart($items);
+			}
 			]]></add>
 		</operation>
 	</file>
@@ -142,21 +160,21 @@ foreach ($this->getProducts() as $product) {
 			<add><![CDATA[
 			$key = $this->config->get('convead_code');
 			if($key){
-			include_once('convead_api/Browser.php');
-			include_once('convead_api/ConveadTracker.php');
+				include_once('convead_api/Browser.php');
+				include_once('convead_api/ConveadTracker.php');
 
-			// Initialize (must be done before sending events):
-			$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
-			$items = array();
-			foreach ($this->cart->getProducts() as $product) {
-			$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
-			  $items[] = array(
-				'product_id' => $product['product_id'],
-				'qnt' => $product['quantity'],
-				'price' => $price
-			  );
-			}
-			$convead->eventUpdateCart($items);
+				// Initialize (must be done before sending events):
+				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
+				$items = array();
+				foreach ($this->cart->getProducts() as $product) {
+					$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
+					$items[] = array(
+						'product_id' => $product['product_id'],
+						'qnt' => $product['quantity'],
+						'price' => $price
+					);
+				}
+				$convead->eventUpdateCart($items);
 			}
 			]]></add>
 		</operation>
