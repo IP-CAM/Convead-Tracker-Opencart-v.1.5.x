@@ -1,6 +1,6 @@
 <modification>
 	<id>Convead</id>
-	<version>1.1.4</version>
+	<version>1.1.5</version>
 	<vqmver>2.4.0</vqmver>
 	<author>panda-code.com</author>
 	
@@ -192,12 +192,18 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			// Initialize (must be done before sending events):
 			$visitor_info = false;
 			if(isset($this->session->data['guest'])){
-				$visitor_info = array(
-				'first_name' => $this->session->data['guest']['firstname'],
-				'last_name' => $this->session->data['guest']['lastname'],
-				'email' => $this->session->data['guest']['email'],
-				'phone' => $this->session->data['guest']['telephone']
+				$visitor_info   = array();
+				$visitor_fields = array(
+					array('firstname', 'first_name'),
+					array('lastname',  'last_name'),
+					array('email', 		 'email'),
+					array('telephone', 'phone')
 				);
+				foreach ($visitor_fields as $field) {
+          if (!empty($this->session->data['guest'][$field[0]])) {
+          	$visitor_info[$field[1]] = $this->session->data['guest'][$field[0]];
+          }
+        }
 			}
 			$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false), $visitor_info);
 
