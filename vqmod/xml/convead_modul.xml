@@ -1,6 +1,6 @@
 <modification>
 	<id>Convead</id>
-	<version>1.1.5</version>
+	<version>1.1.6</version>
 	<vqmver>2.4.0</vqmver>
 	<author>panda-code.com</author>
 	
@@ -109,23 +109,26 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 		<operation error="skip">
 			<search position="after" offset="1"><![CDATA[$this->session->data['cart'][$key] += (int)]]></search>
 			<add><![CDATA[
-			$key = $this->config->get('convead_code');
-			if($key){
-				include_once('convead_api/Browser.php');
-				include_once('convead_api/ConveadTracker.php');
+			//disable the call to the admin panel
+			if (!(isset($_REQUEST['route']) and $_REQUEST['route'] == 'checkout/manual')){
+				$key = $this->config->get('convead_code');
+				if($key){
+					include_once('convead_api/Browser.php');
+					include_once('convead_api/ConveadTracker.php');
 
-				// Initialize (must be done before sending events):
-				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
-				$items = array();
-				foreach ($this->getProducts() as $product) {
-					$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
-					$items[] = array(
-						'product_id' => $product['product_id'],
-						'qnt' => $product['quantity'],
-						'price' => $price
-					);
+					// Initialize (must be done before sending events):
+					$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
+					$items = array();
+					foreach ($this->getProducts() as $product) {
+						$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
+						$items[] = array(
+							'product_id' => $product['product_id'],
+							'qnt' => $product['quantity'],
+							'price' => $price
+						);
+					}
+					$convead->eventUpdateCart($items);
 				}
-				$convead->eventUpdateCart($items);
 			}
 			]]></add>
 		</operation>
