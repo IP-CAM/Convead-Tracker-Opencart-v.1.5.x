@@ -13,7 +13,7 @@
   <?php } ?>
   <?php if(!$convead_code){ ?>
   <div class="attention"><?php echo $text_no_code; ?></div>
-  <? } ?>
+  <?php } ?>
   <div class="box">
     <div class="heading">
       <h1><img src="view/image/module.png" alt="" /> <?php echo $heading_title; ?></h1>
