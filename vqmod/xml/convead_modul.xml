@@ -1,6 +1,6 @@
 <modification>
 	<id>Convead</id>
-	<version>1.1.7</version>
+	<version>1.1.8</version>
 	<vqmver>2.4.0</vqmver>
 	<author>panda-code.com</author>
 	
@@ -100,7 +100,6 @@ if(isset($product_id) && $convead_code){
 			<add><![CDATA[
 $key_api = $this->config->get('convead_code');
 if($key_api){
-include_once('convead_api/Browser.php');
 include_once('convead_api/ConveadTracker.php');
 $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
 }
@@ -112,7 +111,6 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			//disable the call to the admin panel
 			if (!(isset($_REQUEST['route']) and $_REQUEST['route'] == 'checkout/manual')){
 				if($key = $this->config->get('convead_code')){
-					include_once('convead_api/Browser.php');
 					include_once('convead_api/ConveadTracker.php');
 
 					// Initialize (must be done before sending events):
@@ -135,7 +133,6 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			<search position="after"><![CDATA[unset($this->session->data['cart'][$key]);]]></search>
 			<add><![CDATA[
 			if($key = $this->config->get('convead_code')){
-				include_once('convead_api/Browser.php');
 				include_once('convead_api/ConveadTracker.php');
 
 				// Initialize (must be done before sending events):
@@ -160,7 +157,6 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			<search position="after" offset="3"><![CDATA[if (!empty($this->request->post['quantity'])) {]]></search>
 			<add><![CDATA[
 			if($key = $this->config->get('convead_code')){
-				include_once('convead_api/Browser.php');
 				include_once('convead_api/ConveadTracker.php');
 
 				// Initialize (must be done before sending events):
@@ -185,7 +181,6 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			<search position="after"><![CDATA[if (isset($this->session->data['order_id'])) {]]></search>
 			<add><![CDATA[
 			if($key = $this->config->get('convead_code')){
-			include_once('convead_api/Browser.php');
 			include_once('convead_api/ConveadTracker.php');
 
 			// Initialize (must be done before sending events):
@@ -252,7 +247,6 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 			<add><![CDATA[
 			if($key = $this->config->get('convead_code')){
 			$root = $_SERVER['DOCUMENT_ROOT'];
-			include_once($root.'/convead_api/Browser.php');
 			include_once($root.'/convead_api/ConveadTracker.php');
 
 			// Initialize (must be done before sending events):
