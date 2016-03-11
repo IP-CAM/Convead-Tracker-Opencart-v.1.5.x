@@ -77,15 +77,11 @@ if($this->customer->isLogged()){
 			<add><![CDATA[
 <?php
 if(isset($product_id) && $convead_code){ 
-	$category = $this->db->query("SELECT category_id FROM ".DB_PREFIX."product_to_category WHERE product_id = '" . (int)$product_id . "' AND main_category = 1 LIMIT 1");
 ?>
 <script>
   convead('event', 'view_product', {
 	product_id: <?php echo (int)$product_id; ?>,
 	product_name: '<?php echo str_replace("'", "&#39;", $product_name); ?>',
-<?php if (!empty($category->row['category_id'])): ?>
-  category_id: <?php echo (int)$category->row['category_id']; ?>,
-<?php endif; ?>
 	product_url: '<?php echo $product_url; ?>'
   });
 </script> 
