@@ -4,7 +4,7 @@
  * Класс для работы с сервисом convead.io
  */
 class ConveadTracker {
-    public $version = '1.1.7';
+    public $version = '1.1.10';
 
     private $browser;
     private $api_key;
@@ -15,8 +15,8 @@ class ConveadTracker {
     private $api_page = "https://tracker.convead.io/watch/event";
     private $url = false;
     private $domain = false;
-    private $charset = 'utf-8';
-    private $debug = false;
+    public $charset = 'utf-8';
+    public $debug = false;
 
     /**
      * 
@@ -41,7 +41,7 @@ class ConveadTracker {
      * @param type $url
      */
     public function __construct($api_key, $domain, $guest_uid, $visitor_uid = false, $visitor_info = false, $referrer = false, $url = false) {
-        $this->browser = new Browser();
+        $this->browser = new ConveadBrowser();
         $this->api_key = (string) $api_key;
         
         $domain_encoding = mb_detect_encoding($domain, array('UTF-8', 'windows-1251'));
@@ -165,7 +165,9 @@ class ConveadTracker {
         $properties = array();
         $properties["order_id"] = (string) $order_id;
 
-        if ($revenue) $properties["revenue"] = $revenue;
+        if ($revenue == false) return false;
+        else $properties["revenue"] = $revenue;
+
         if (is_array($order_array)) $properties["items"] = $order_array;
 
         $post["properties"] = $properties;
@@ -330,7 +332,7 @@ class ConveadTracker {
 /**
  * Класс для работы с post запросами
  */
-class Browser {
+class ConveadBrowser {
     public $version = '1.1.3';
 
     protected $config = array();
