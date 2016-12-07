@@ -1,6 +1,6 @@
 <modification>
 	<id>Convead</id>
-	<version>1.1.8</version>
+	<version>1.2.0</version>
 	<vqmver>2.4.0</vqmver>
 	<author>panda-code.com</author>
 	
@@ -14,7 +14,7 @@ $this->data['customer_firstname'] = "";
 $this->data['customer_lastname'] = "";
 $this->data['customer_email'] = "";
 $this->data['customer_phone'] = "";
-if($this->customer->isLogged()){
+if ($this->customer->isLogged()){
 	$this->data['customer_id'] = $this->customer->getId();
 	$this->data['customer_firstname'] = $this->customer->getFirstName();
 	$this->data['customer_lastname'] = $this->customer->getLastName();
@@ -32,19 +32,19 @@ if($this->customer->isLogged()){
 <?php if($convead_code){ ?>
 <script>
   window.ConveadSettings = {
-	<?php if($customer_id){ ?>
+	<?php if ($customer_id){ ?>
     visitor_uid: '<?php echo $customer_id; ?>',
     visitor_info: {
 <?php if($customer_firstname){ ?>
 		first_name: '<?php echo str_replace("'", "&#39;", $customer_firstname); ?>',
 <?php } ?>
-<?php if($customer_lastname){ ?>
+<?php if ($customer_lastname){ ?>
 		last_name: '<?php echo str_replace("'", "&#39;", $customer_lastname); ?>',
 <?php } ?>
-<?php if($customer_email){ ?>
+<?php if ($customer_email){ ?>
 		email: '<?php echo $customer_email; ?>',
 <?php } ?>
-<?php if($customer_phone){ ?>
+<?php if ($customer_phone){ ?>
 		phone: '<?php echo $customer_phone; ?>'
 <?php } ?>
     },
@@ -76,7 +76,7 @@ if($this->customer->isLogged()){
 			<search position="before"><![CDATA[<?php echo $footer; ?>]]></search>
 			<add><![CDATA[
 <?php
-if(isset($product_id) && $convead_code){ 
+if (isset($product_id) && $convead_code){ 
 ?>
 <script>
   convead('event', 'view_product', {
@@ -95,9 +95,9 @@ if(isset($product_id) && $convead_code){
 			<search position="after"><![CDATA[$this->weight = $registry->get('weight');]]></search>
 			<add><![CDATA[
 $key_api = $this->config->get('convead_code');
-if($key_api){
-include_once('convead_api/ConveadTracker.php');
-$this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
+if ($key_api){
+	include_once('convead_api/ConveadTracker.php');
+	$this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
 }
 			]]></add>
 		</operation>
@@ -128,7 +128,7 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 		<operation error="skip">
 			<search position="after"><![CDATA[unset($this->session->data['cart'][$key]);]]></search>
 			<add><![CDATA[
-			if($key = $this->config->get('convead_code')){
+			if ($key = $this->config->get('convead_code')){
 				include_once('convead_api/ConveadTracker.php');
 
 				// Initialize (must be done before sending events):
@@ -152,7 +152,7 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 		<operation error="skip">
 			<search position="after" offset="3"><![CDATA[if (!empty($this->request->post['quantity'])) {]]></search>
 			<add><![CDATA[
-			if($key = $this->config->get('convead_code')){
+			if ($key = $this->config->get('convead_code')){
 				include_once('convead_api/ConveadTracker.php');
 
 				// Initialize (must be done before sending events):
@@ -176,62 +176,69 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 		<operation error="skip">
 			<search position="after"><![CDATA[if (isset($this->session->data['order_id'])) {]]></search>
 			<add><![CDATA[
-			if($key = $this->config->get('convead_code')){
-			include_once('convead_api/ConveadTracker.php');
+			if ($key = $this->config->get('convead_code')){
+				$order_id = $this->session->data['order_id'];
 
-			// Initialize (must be done before sending events):
-			$visitor_info = false;
-			if(isset($this->session->data['guest'])){
-				$visitor_info   = array();
-				$visitor_fields = array(
-					array('firstname', 'first_name'),
-					array('lastname',  'last_name'),
-					array('email', 		 'email'),
-					array('telephone', 'phone')
-				);
-				foreach ($visitor_fields as $field) {
-          		  if (!empty($this->session->data['guest'][$field[0]])) {
-          	        $visitor_info[$field[1]] = $this->session->data['guest'][$field[0]];
-                  }
-                }
-			}
-			$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false), $visitor_info);
+				include_once('convead_api/ConveadTracker.php');
 
-			// Send event ‘purchase’:
-			$items = array();
-			foreach ($this->cart->getProducts() as $product) {
-			  $items[] = array(
-				'product_id' => $product['product_id'],
-				'qnt' => $product['quantity'],
-				'price' => $product['price']
-			  );
-			}
-            $total_data = array();
-            $total = 0;
-            $taxes = $this->cart->getTaxes();
-             
-            $this->load->model('setting/extension');
-            
-            $results = $this->model_setting_extension->getExtensions('total');
-            
-            foreach ($results as $result) {
-                if ($this->config->get($result['code'] . '_status')) {
-                    $this->load->model('total/' . $result['code']);
-        
-                    $this->{'model_total_' . $result['code']}->getTotal($total_data, $total, $taxes);
-                }
-            }
-            $total_s = 0;
-            foreach($total_data as $total_d){
-                if($total_d['code']=='total'){
-                    $total_s=$total_d['value'];
-                }
-            }
-			if(isset($this->session->data['shipping_method']['cost'])){
-				$total_s = $total_s-$this->session->data['shipping_method']['cost'];
-			}
-			$convead->eventOrder($this->session->data['order_id'], $total_s, $items);
-			
+				// Initialize (must be done before sending events):
+				$visitor_info = false;
+				if(isset($this->session->data['guest'])){
+					$visitor_info   = array();
+					$visitor_fields = array(
+						array('firstname', 'first_name'),
+						array('lastname',  'last_name'),
+						array('email', 		 'email'),
+						array('telephone', 'phone')
+					);
+					foreach ($visitor_fields as $field) {
+	          		  if (!empty($this->session->data['guest'][$field[0]])) {
+	          	        $visitor_info[$field[1]] = $this->session->data['guest'][$field[0]];
+	                  }
+	                }
+				}
+				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false), $visitor_info);
+
+				// Send event ‘purchase’:
+				$items = array();
+				foreach ($this->cart->getProducts() as $product) {
+				  $items[] = array(
+					'product_id' => $product['product_id'],
+					'qnt' => $product['quantity'],
+					'price' => $product['price']
+				  );
+				}
+	            $total_data = array();
+	            $total = 0;
+	            $taxes = $this->cart->getTaxes();
+	             
+	            $this->load->model('setting/extension');
+	            
+	            $results = $this->model_setting_extension->getExtensions('total');
+	            
+	            foreach ($results as $result) {
+	                if ($this->config->get($result['code'] . '_status')) {
+	                    $this->load->model('total/' . $result['code']);
+	        
+	                    $this->{'model_total_' . $result['code']}->getTotal($total_data, $total, $taxes);
+	                }
+	            }
+	            $total_s = 0;
+	            foreach($total_data as $total_d){
+	                if($total_d['code']=='total'){
+	                    $total_s=$total_d['value'];
+	                }
+	            }
+				if(isset($this->session->data['shipping_method']['cost'])){
+					$total_s = $total_s-$this->session->data['shipping_method']['cost'];
+				}
+
+				$this->load->model('checkout/order');
+				$arOrder = $this->model_checkout_order->getOrder($order_id);
+				$state = $arOrder ? $arOrder['order_status_id'] : 'new';
+
+				$convead->eventOrder($order_id, $total_s, $items, $state);
+				
 			}
 			]]></add>
 		</operation>
@@ -241,51 +248,99 @@ $this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_CO
 		<operation error="skip">
 			<search position="after"><![CDATA[$order_id = $this->db->getLastId();]]></search>
 			<add><![CDATA[
-			if($key = $this->config->get('convead_code')){
-			$root = $_SERVER['DOCUMENT_ROOT'];
-			include_once($root.'/convead_api/ConveadTracker.php');
+			if ($key = $this->config->get('convead_code')){
+				include_once($_SERVER['DOCUMENT_ROOT'].'/convead_api/ConveadTracker.php');
 
-			// Initialize (must be done before sending events):
-			$visitor_info = false;
-			if(isset($this->session->data['guest'])){
-				$visitor_info   = array();
-				$visitor_fields = array(
-					array('firstname', $this->request->post['firstname']),
-					array('lastname',  $this->request->post['lastname']),
-					array('email', 	   $this->request->post['email']),
-					array('telephone', $this->request->post['telephone'])
-				);
-				foreach ($visitor_fields as $field) {
-          		  if (!empty($this->session->data['guest'][$field[0]])) {
-          	        $visitor_info[$field[1]] = $this->session->data['guest'][$field[0]];
-                  }
-                }
-			}
-			if (!empty($this->request->post['customer_id']))
-			{
-				$uid = $this->request->post['customer_id'];
-				$guest_uid = false;
-			}
-			else
-			{
-				$uid = false;
-				$guest_uid = uniqid();
-			}
-			$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], $guest_uid, $uid, $visitor_info);
+				// Initialize (must be done before sending events):
+				$visitor_info = false;
+				if(isset($this->session->data['guest'])){
+					$visitor_info   = array();
+					$visitor_fields = array(
+						array('firstname', $this->request->post['firstname']),
+						array('lastname',  $this->request->post['lastname']),
+						array('email', 	   $this->request->post['email']),
+						array('telephone', $this->request->post['telephone'])
+					);
+					foreach ($visitor_fields as $field) {
+	          		  if (!empty($this->session->data['guest'][$field[0]])) {
+	          	        $visitor_info[$field[1]] = $this->session->data['guest'][$field[0]];
+	                  }
+	                }
+				}
+				if (!empty($this->request->post['customer_id']))
+				{
+					$uid = $this->request->post['customer_id'];
+					$guest_uid = false;
+				}
+				else
+				{
+					$uid = false;
+					$guest_uid = uniqid();
+				}
+				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], $guest_uid, $uid, $visitor_info);
 
-			// Send event ‘purchase’:
-			$total = 0;
-			$items = array();
-			foreach ($this->request->post['order_product'] as $product) {
-			  $items[] = array(
-				'product_id' => $product['product_id'],
-				'qnt' => $product['quantity'],
-				'price' => $product['price']
-			  );
-			  $total += $product['price'] * $product['quantity'];
-			}
+				// Send event ‘purchase’:
+				$total = 0;
+				$items = array();
+				foreach ($this->request->post['order_product'] as $product) {
+				  $items[] = array(
+					'product_id' => $product['product_id'],
+					'qnt' => $product['quantity'],
+					'price' => $product['price']
+				  );
+				  $total += $product['price'] * $product['quantity'];
+				}
 
-			$convead->eventOrder($order_id, $total, $items);
+				$this->load->model('checkout/order');
+				$arOrder = $this->model_checkout_order->getOrder($order_id);
+				$state = $arOrder ? $arOrder['order_status_id'] : 'new';
+
+				$convead->eventOrder($order_id, $total, $items, $state);
+			}
+			]]></add>
+		</operation>
+	</file>
+
+	<file path="admin/controller/sale/" name="order.php">
+		<operation error="skip">
+			<search position="after"><![CDATA[$this->model_sale_order->editOrder($this->request->get['order_id'], $this->request->post);]]></search>
+			<add><![CDATA[
+			if ($key = $this->config->get('convead_code')){
+				$order_id = $this->request->get['order_id'];
+				
+				include_once($_SERVER['DOCUMENT_ROOT'].'/convead_api/ConveadTracker.php');
+
+				$convead = new ConveadTracker($key);
+
+				// Send event ‘purchase’:
+				$total = 0;
+				$items = array();
+				foreach ($this->request->post['order_product'] as $product) {
+				  $items[] = array(
+					'product_id' => $product['product_id'],
+					'qnt' => $product['quantity'],
+					'price' => $product['price']
+				  );
+				  $total += $product['price'] * $product['quantity'];
+				}
+
+				$this->load->model('sale/order');
+				$arOrder = $this->model_sale_order->getOrder($order_id);
+
+				if ($arOrder) {
+					$state = $arOrder['order_status_id'];
+					$convead->webHookOrderUpdate($order_id, $state, $total, $items);
+				}
+			}
+			]]></add>
+		</operation>
+		<operation error="skip">
+			<search position="after"><![CDATA[$this->model_sale_order->deleteOrder($order_id);]]></search>
+			<add><![CDATA[
+			if ($key = $this->config->get('convead_code')){
+				include_once($_SERVER['DOCUMENT_ROOT'].'/convead_api/ConveadTracker.php');
+				$convead = new ConveadTracker($key);
+				$convead->webHookOrderUpdate($order_id, 'cancelled');
 			}
 			]]></add>
 		</operation>
