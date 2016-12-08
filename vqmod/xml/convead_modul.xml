@@ -1,6 +1,6 @@
 <modification>
 	<id>Convead</id>
-	<version>1.2.0</version>
+	<version>1.2.1</version>
 	<vqmver>2.4.0</vqmver>
 	<author>panda-code.com</author>
 	
@@ -331,6 +331,16 @@ if ($key_api){
 					$state = $arOrder['order_status_id'];
 					$convead->webHookOrderUpdate($order_id, $state, $total, $items);
 				}
+			}
+			]]></add>
+		</operation>
+		<operation error="skip">
+			<search position="after"><![CDATA[$this->model_sale_order->addOrderHistory($this->request->get['order_id'], $this->request->post);]]></search>
+			<add><![CDATA[
+			if ($key = $this->config->get('convead_code') and isset($this->request->post['order_status_id'])){
+				include_once($_SERVER['DOCUMENT_ROOT'].'/convead_api/ConveadTracker.php');
+				$convead = new ConveadTracker($key);
+				$convead->webHookOrderUpdate($this->request->get['order_id'], $this->request->post['order_status_id']);
 			}
 			]]></add>
 		</operation>
