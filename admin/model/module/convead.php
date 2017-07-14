@@ -7,7 +7,7 @@ class ModelModuleConvead extends Model {
     $revenue = 0;
     foreach ($products as $product) {
       $variant_id = $this->getVariantId($product['product_id'], $product['option']);
-      $price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
+      $price = $product['price'];
       $items[] = array(
       'product_id' => $variant_id,
       'qnt' => $product['quantity'],
