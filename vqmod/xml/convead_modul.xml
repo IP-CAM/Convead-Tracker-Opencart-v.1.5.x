@@ -1,6 +1,6 @@
 <modification>
 	<id>Convead</id>
-	<version>1.2.1</version>
+	<version>1.3.1</version>
 	<vqmver>2.4.0</vqmver>
 	<author>panda-code.com</author>
 	
@@ -76,11 +76,12 @@ if ($this->customer->isLogged()){
 			<search position="before"><![CDATA[<?php echo $footer; ?>]]></search>
 			<add><![CDATA[
 <?php
-if (isset($product_id) && $convead_code){ 
+if (isset($product_id) && $convead_code){
+	$this->load->model('module/convead');
 ?>
 <script>
   convead('event', 'view_product', {
-	product_id: <?php echo (int)$product_id; ?>,
+	product_id: <?php echo $this->model_module_convead->getVariantId($product_id, $options); ?>,
 	product_name: '<?php echo str_replace("'", "&#39;", $product_name); ?>',
 	product_url: '<?php echo $product_url; ?>'
   });
@@ -90,82 +91,35 @@ if (isset($product_id) && $convead_code){
 		</operation>
 	</file>
 	
-	<file path="system/library/" name="cart.php">
+	<file path="catalog/controller/checkout/" name="cart.php">
 		<operation error="skip">
-			<search position="after"><![CDATA[$this->weight = $registry->get('weight');]]></search>
-			<add><![CDATA[
-$key_api = $this->config->get('convead_code');
-if ($key_api){
-	include_once('convead_api/ConveadTracker.php');
-	$this->convead = new ConveadTracker($key_api, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
-}
-			]]></add>
-		</operation>
-		<operation error="skip">
-			<search position="after" offset="1"><![CDATA[$this->session->data['cart'][$key] += (int)]]></search>
-			<add><![CDATA[
-			//disable the call to the admin panel
-			if (!(isset($_REQUEST['route']) and $_REQUEST['route'] == 'checkout/manual')){
-				if($key = $this->config->get('convead_code')){
-					include_once('convead_api/ConveadTracker.php');
-
-					// Initialize (must be done before sending events):
-					$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
-					$items = array();
-					foreach ($this->getProducts() as $product) {
-						$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
-						$items[] = array(
-							'product_id' => $product['product_id'],
-							'qnt' => $product['quantity'],
-							'price' => $price
-						);
-					}
-					$convead->eventUpdateCart($items);
-				}
-			}
-			]]></add>
-		</operation>
-		<operation error="skip">
-			<search position="after"><![CDATA[unset($this->session->data['cart'][$key]);]]></search>
+			<search position="after" offset="1"><![CDATA[unset($this->session->data['reward']);]]></search>
 			<add><![CDATA[
 			if ($key = $this->config->get('convead_code')){
 				include_once('convead_api/ConveadTracker.php');
 
 				// Initialize (must be done before sending events):
 				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
-				$items = array();
-				foreach ($this->getProducts() as $product) {
-					$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
-					$items[] = array(
-						'product_id' => $product['product_id'],
-						'qnt' => $product['quantity'],
-						'price' => $price
-					);
-				}
+      
+				$this->load->model('module/convead');
+				list($total, $items) = $this->model_module_convead->lineItemsInfo($this->cart->getProducts());
+
 				$convead->eventUpdateCart($items);
 			}
 			]]></add>
 		</operation>
-	</file>
-
-	<file path="catalog/controller/checkout/" name="cart.php">	
 		<operation error="skip">
-			<search position="after" offset="3"><![CDATA[if (!empty($this->request->post['quantity'])) {]]></search>
+			<search position="after" offset="1"><![CDATA[$this->cart->add($this->request->post['product_id'], $quantity, $option);]]></search>
 			<add><![CDATA[
 			if ($key = $this->config->get('convead_code')){
 				include_once('convead_api/ConveadTracker.php');
 
 				// Initialize (must be done before sending events):
 				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false));
-				$items = array();
-				foreach ($this->cart->getProducts() as $product) {
-					$price = $this->tax->calculate($product['price'], $product['tax_class_id'], $this->config->get('config_tax'));
-					$items[] = array(
-						'product_id' => $product['product_id'],
-						'qnt' => $product['quantity'],
-						'price' => $price
-					);
-				}
+      
+				$this->load->model('module/convead');
+				list($total, $items) = $this->model_module_convead->lineItemsInfo($this->cart->getProducts());
+
 				$convead->eventUpdateCart($items);
 			}
 			]]></add>
@@ -199,36 +153,30 @@ if ($key_api){
 				}
 				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], (isset($_COOKIE['convead_guest_uid']) ? $_COOKIE['convead_guest_uid'] : ''), ($this->customer->isLogged() ? $this->customer->getId() : false), $visitor_info);
 
-				// Send event ‘purchase’:
-				$items = array();
-				foreach ($this->cart->getProducts() as $product) {
-				  $items[] = array(
-					'product_id' => $product['product_id'],
-					'qnt' => $product['quantity'],
-					'price' => $product['price']
-				  );
+				$this->load->model('module/convead');
+				list($total, $items) = $this->model_module_convead->lineItemsInfo($this->cart->getProducts());
+
+				$total_data = array();
+				$total = 0;
+				$taxes = $this->cart->getTaxes();
+		 
+				$this->load->model('setting/extension');
+		
+				$results = $this->model_setting_extension->getExtensions('total');
+		
+				foreach ($results as $result) {
+					if ($this->config->get($result['code'] . '_status')) {
+						$this->load->model('total/' . $result['code']);
+	
+						$this->{'model_total_' . $result['code']}->getTotal($total_data, $total, $taxes);
+					}
 				}
-	            $total_data = array();
-	            $total = 0;
-	            $taxes = $this->cart->getTaxes();
-	             
-	            $this->load->model('setting/extension');
-	            
-	            $results = $this->model_setting_extension->getExtensions('total');
-	            
-	            foreach ($results as $result) {
-	                if ($this->config->get($result['code'] . '_status')) {
-	                    $this->load->model('total/' . $result['code']);
-	        
-	                    $this->{'model_total_' . $result['code']}->getTotal($total_data, $total, $taxes);
-	                }
-	            }
-	            $total_s = 0;
-	            foreach($total_data as $total_d){
-	                if($total_d['code']=='total'){
-	                    $total_s=$total_d['value'];
-	                }
-	            }
+				$total_s = 0;
+				foreach($total_data as $total_d){
+					if($total_d['code']=='total'){
+						$total_s=$total_d['value'];
+					}
+				}
 				if(isset($this->session->data['shipping_method']['cost'])){
 					$total_s = $total_s-$this->session->data['shipping_method']['cost'];
 				}
@@ -279,17 +227,8 @@ if ($key_api){
 				}
 				$convead = new ConveadTracker($key, $_SERVER['HTTP_HOST'], $guest_uid, $uid, $visitor_info);
 
-				// Send event ‘purchase’:
-				$total = 0;
-				$items = array();
-				foreach ($this->request->post['order_product'] as $product) {
-				  $items[] = array(
-					'product_id' => $product['product_id'],
-					'qnt' => $product['quantity'],
-					'price' => $product['price']
-				  );
-				  $total += $product['price'] * $product['quantity'];
-				}
+				$this->load->model('module/convead');
+				list($total, $items) = $this->model_module_convead->lineItemsInfo($this->request->post['order_product']);
 
 				$this->load->model('checkout/order');
 				$arOrder = $this->model_checkout_order->getOrder($order_id);
@@ -312,17 +251,8 @@ if ($key_api){
 
 				$convead = new ConveadTracker($key);
 
-				// Send event ‘purchase’:
-				$total = 0;
-				$items = array();
-				foreach ($this->request->post['order_product'] as $product) {
-				  $items[] = array(
-					'product_id' => $product['product_id'],
-					'qnt' => $product['quantity'],
-					'price' => $product['price']
-				  );
-				  $total += $product['price'] * $product['quantity'];
-				}
+				$this->load->model('module/convead');
+				list($total, $items) = $this->model_module_convead->lineItemsInfo($this->request->post['order_product']);
 
 				$this->load->model('sale/order');
 				$arOrder = $this->model_sale_order->getOrder($order_id);
