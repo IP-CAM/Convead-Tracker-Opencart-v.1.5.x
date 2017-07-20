@@ -21,8 +21,9 @@ class ModelModuleConvead extends Model {
   public function getVariantId($product_id, $options) {
     if (count($options)) {
       $option = current($options);
+      $limit = (strlen($product_id) > 2 ? 7 : 5);
       if (!isset($option['product_option_value_id']) and isset($option['option_value']) and is_array($option['option_value'])) $option = current($option['option_value']);
-      return $product_id.(isset($option['product_option_value_id']) ? str_pad($option['product_option_value_id'], 6, '0', STR_PAD_LEFT) : '');
+      return $product_id.(isset($option['product_option_value_id']) ? str_pad($option['product_option_value_id'], $limit, '0', STR_PAD_LEFT) : '');
     }
     else {
       return $product_id;
