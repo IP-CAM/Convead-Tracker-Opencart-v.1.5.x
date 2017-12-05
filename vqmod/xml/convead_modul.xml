@@ -230,8 +230,8 @@ if (isset($product_id) && $convead_code){
 				$this->load->model('module/convead');
 				list($total, $items) = $this->model_module_convead->lineItemsInfo($this->request->post['order_product']);
 
-				$this->load->model('checkout/order');
-				$arOrder = $this->model_checkout_order->getOrder($order_id);
+				$this->load->model('sale/order');
+				$arOrder = $this->model_sale_order->getOrder($order_id);
 				$state = $arOrder ? $arOrder['order_status_id'] : 'new';
 
 				$convead->eventOrder($order_id, $total, $items, $state);
