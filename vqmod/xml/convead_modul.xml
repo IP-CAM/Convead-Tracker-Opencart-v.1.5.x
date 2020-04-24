@@ -126,12 +126,11 @@ if (isset($product_id) && $convead_code){
 		</operation>
 	</file>
 	
-	<file path="catalog/controller/checkout/" name="success.php">
+	<file path="catalog/model/checkout/" name="order.php">
 		<operation error="skip">
-			<search position="after"><![CDATA[if (isset($this->session->data['order_id'])) {]]></search>
+      <search position="before" regex="true" limit="1"><![CDATA[/if(\s*)\((\s*)\$status(\s*)\)/]]></search>
 			<add><![CDATA[
-			if ($key = $this->config->get('convead_code')){
-				$order_id = $this->session->data['order_id'];
+			if (isset($order_id) && $order_id>0 && $key = $this->config->get('convead_code')){
 
 				include_once('convead_api/ConveadTracker.php');
 
